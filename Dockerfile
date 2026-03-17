@@ -1,10 +1,24 @@
-FROM ubuntu:18.04
-ARG DEBIAN_FRONTEND=noninteractive
-#RUN sed -i 's/http:\/\/archive.ubuntu.com\/ubuntu\//https:\/\/archive.ubuntu.com\/ubuntu\//g' /etc/apt/sources.list
-RUN sed -i 's/http:\/\/archive.ubuntu.com\//http:\/\/us.archive.ubuntu.com\//g' /etc/apt/sources.list
-RUN apt-get update -y && apt-get install -y apache2
-RUN apt-get install -y php libapache2-mod-php
-COPY 000-default.conf /etc/apache2/sites-available/000-default.conf
-ADD . /var/www/html/
+# Use official PHP Apache image
+FROM php:8.2-apache
+
+# Enable Apache rewrite module
+RUN a2enmod rewrite
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Remove default Apache files
+RUN rm -rf /var/www/html/*
+
+# Copy project files into container
+COPY . /var/www/html/
+
+# Set correct permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html
+
+# Expose Apache port
 EXPOSE 80
-ENTRYPOINT apachectl -D FOREGROUND
+
+# Start Apache
+CMD ["apache2-foreground"]
